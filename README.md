@@ -6,6 +6,18 @@
 
 与 new-api 官方无关，仅通过其管理接口读取数据。
 
+## 效果预览
+
+<p align="center">
+  <img src="screenshots/orb-collapsed.png" width="300" alt="收起态：悬浮球显示今日 Token 总量">
+  &nbsp;&nbsp;
+  <img src="screenshots/orb-expanded.png" width="300" alt="展开态：明细卡片、按小时柱状图与按令牌排行">
+</p>
+
+<p align="center">
+  <sub>左：收起态悬浮球　·　右：展开态明细卡片</sub>
+</p>
+
 ## 功能
 
 - **收起态** —— 圆形悬浮球，显示一个主指标（默认「今日 Token 总量」），带刻度环与缓慢流动的光效
