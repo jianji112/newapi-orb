@@ -1,0 +1,311 @@
+<Window x:Class="NewApiOrb.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New API Orb · 设置"
+        Width="560" Height="700"
+        WindowStartupLocation="Manual"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        TextOptions.TextFormattingMode="Display">
+
+    <Window.Resources>
+
+        <Style x:Key="Input" TargetType="TextBox">
+            <Setter Property="Background" Value="#12151A" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#2EFFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="9,7" />
+            <Setter Property="CaretBrush" Value="#FFFFFF" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ComboItem" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}" CornerRadius="4">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2EFFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="Combo" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource ComboItem}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Focusable="False" ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="#12151A" BorderBrush="#2EFFFFFF"
+                                                BorderThickness="1" CornerRadius="6">
+                                            <Grid>
+                                                <ContentPresenter Margin="10,8,28,8"
+                                                                  HorizontalAlignment="Left"
+                                                                  VerticalAlignment="Center"
+                                                                  TextBlock.Foreground="#FFFFFF"
+                                                                  Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                                  ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
+                                                <Path Data="M0,0 L4,4 L8,0" Stroke="#99FFFFFF"
+                                                      StrokeThickness="1.4" Fill="Transparent"
+                                                      HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                      Margin="0,0,11,0" />
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                                   AllowsTransparency="True" PopupAnimation="Fade">
+                                <Border Background="#22262C" BorderBrush="#2EFFFFFF" BorderThickness="1"
+                                        CornerRadius="6" Margin="0,4,0,0"
+                                        MinWidth="{TemplateBinding ActualWidth}" MaxHeight="280">
+                                    <ScrollViewer>
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="Chk" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="Mini" TargetType="Button">
+            <Setter Property="Foreground" Value="#99FFFFFF" />
+            <Setter Property="Background" Value="#1AFFFFFF" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GroupTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#5CFFFFFF" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="Margin" Value="0,18,0,0" />
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#B3FFFFFF" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="Margin" Value="0,10,0,4" />
+        </Style>
+
+    </Window.Resources>
+
+    <Border Background="#F51B1E23" BorderBrush="#2EFFFFFF" BorderThickness="1" CornerRadius="12">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="28" ShadowDepth="4" Direction="270"
+                              Opacity="0.55" Color="#000000" />
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="64" />
+            </Grid.RowDefinitions>
+
+            <!-- 标题栏 -->
+            <Grid Grid.Row="0" Background="#14FFFFFF" MouseLeftButtonDown="OnTitleBarDrag">
+                <TextBlock Text="New API Orb · 设置" Margin="18,0,0,0"
+                           VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                           Foreground="#FFFFFF" FontFamily="Microsoft YaHei UI, Segoe UI" />
+                <Button Content="✕" Width="40" Height="30" Margin="0,0,8,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Style="{StaticResource Mini}" Click="OnCancelClick" />
+            </Grid>
+
+            <!-- 内容 -->
+            <ScrollViewer x:Name="Scroller" Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="22,0,18,0">
+                <StackPanel>
+
+                    <TextBlock Text="网关连接" Style="{StaticResource GroupTitle}" />
+
+                    <TextBlock Margin="0,0,0,10" TextWrapping="Wrap" FontSize="12" Foreground="#8A94A6"
+                               Text="填你自己的 new-api 网关地址（默认端口 3000）。访问令牌在 new-api 后台「个人设置 → 系统访问令牌」里生成或复制 —— 注意要的是系统访问令牌，不是 sk- 开头的 API Key，拿后者调管理接口会返回 401。" />
+
+                    <TextBlock Text="网关地址" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="TxtBaseUrl" Style="{StaticResource Input}" />
+
+                    <TextBlock Text="系统访问令牌（access token）" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="TxtToken" Style="{StaticResource Input}" />
+
+                    <TextBlock Text="用户 ID" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="TxtUserId" Style="{StaticResource Input}" Width="120"
+                             HorizontalAlignment="Left" />
+
+                    <TextBlock Text="刷新间隔（秒）" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="TxtRefresh" Style="{StaticResource Input}" Width="120"
+                             HorizontalAlignment="Left" />
+
+                    <TextBlock Text="显示内容" Style="{StaticResource GroupTitle}" />
+
+                    <TextBlock Text="收起态主指标" Style="{StaticResource FieldLabel}" />
+                    <!-- ⚠️ 必须显式给 ItemTemplate。ComboBox.SelectionBoxItemTemplate 只反映 ItemTemplate，
+                         不认 DisplayMemberPath —— 用后者收起态会显示成 "Meta { Key = ... }" 原始对象。 -->
+                    <ComboBox x:Name="CmbPrimary" Style="{StaticResource Combo}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Label}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <TextBlock Text="展开卡片显示的字段（勾选启用，↑↓ 调整顺序）"
+                               Style="{StaticResource FieldLabel}" />
+                    <ItemsControl x:Name="FieldItems">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox IsChecked="{Binding Checked, Mode=TwoWay}"
+                                              Content="{Binding Label}"
+                                              Foreground="#FFFFFF" FontSize="12"
+                                              FontFamily="Microsoft YaHei UI, Segoe UI"
+                                              VerticalContentAlignment="Center" Cursor="Hand" />
+                                    <Button Grid.Column="1" Content="↑" Width="28" Height="24"
+                                            Margin="6,0,0,0" Style="{StaticResource Mini}"
+                                            Click="OnMoveUp" Tag="{Binding}" />
+                                    <Button Grid.Column="2" Content="↓" Width="28" Height="24"
+                                            Margin="4,0,0,0" Style="{StaticResource Mini}"
+                                            Click="OnMoveDown" Tag="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <CheckBox x:Name="ChkChart" Content="显示今日按小时柱状图"
+                              Style="{StaticResource Chk}" Margin="0,14,0,0" />
+
+                    <TextBlock Text="外观" Style="{StaticResource GroupTitle}" />
+
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="悬浮球大小" Style="{StaticResource FieldLabel}"
+                                   Margin="0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="LblSize" Grid.Column="1" Text="112 px"
+                                   Foreground="#99FFFFFF" FontSize="12"
+                                   FontFamily="Microsoft YaHei UI, Segoe UI" VerticalAlignment="Center" />
+                    </Grid>
+                    <Slider x:Name="SldSize" Minimum="70" Maximum="220" Value="112"
+                            Margin="0,6,0,0" />
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="不透明度" Style="{StaticResource FieldLabel}"
+                                   Margin="0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="LblOpacity" Grid.Column="1" Text="94%"
+                                   Foreground="#99FFFFFF" FontSize="12"
+                                   FontFamily="Microsoft YaHei UI, Segoe UI" VerticalAlignment="Center" />
+                    </Grid>
+                    <Slider x:Name="SldOpacity" Minimum="0.3" Maximum="1" Value="0.94"
+                            Margin="0,6,0,0" />
+
+                    <TextBlock Text="卡片宽度" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="TxtCardWidth" Style="{StaticResource Input}" Width="120"
+                             HorizontalAlignment="Left" />
+
+                    <CheckBox x:Name="ChkTopmost" Content="窗口置顶"
+                              Style="{StaticResource Chk}" Margin="0,16,0,0" />
+                    <CheckBox x:Name="ChkStartup" Content="开机自启"
+                              Style="{StaticResource Chk}" Margin="0,10,0,0" />
+
+                    <TextBlock x:Name="LblConfigPath" Style="{StaticResource GroupTitle}"
+                               TextWrapping="Wrap" Margin="0,22,0,0" />
+
+                    <Rectangle Height="1" Fill="#1AFFFFFF" Margin="0,18,0,0" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 底部按钮 -->
+            <Grid Grid.Row="2" Margin="22,0,18,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                    <Button Content="恢复默认" Style="{StaticResource Mini}"
+                            Padding="12,7" Click="OnResetClick" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <Button Content="取消" Style="{StaticResource Mini}"
+                            Padding="16,7" Margin="0,0,8,0" Click="OnCancelClick" />
+                    <Button Content="保存并应用" Style="{StaticResource Btn.Primary}"
+                            Padding="16,7" Click="OnSaveClick" />
+                </StackPanel>
+            </Grid>
+
+        </Grid>
+    </Border>
+</Window>
