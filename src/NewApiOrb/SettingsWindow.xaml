@@ -214,15 +214,24 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
+                    <TextBlock Text="球体副指标（主指标下方那一行）" Style="{StaticResource FieldLabel}" />
+                    <!-- 同样必须显式给 ItemTemplate，理由见上面 CmbPrimary 的注释 -->
+                    <ComboBox x:Name="CmbSub" Style="{StaticResource Combo}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Label}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
                     <TextBlock Text="展开卡片显示的字段（勾选启用，↑↓ 调整顺序）"
                                Style="{StaticResource FieldLabel}" />
                     <ItemsControl x:Name="FieldItems">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,3">
+                                <Grid Margin="0,3" Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <CheckBox IsChecked="{Binding Checked, Mode=TwoWay}"
@@ -230,12 +239,23 @@
                                               Foreground="#FFFFFF" FontSize="12"
                                               FontFamily="Microsoft YaHei UI, Segoe UI"
                                               VerticalContentAlignment="Center" Cursor="Hand" />
-                                    <Button Grid.Column="1" Content="↑" Width="28" Height="24"
-                                            Margin="6,0,0,0" Style="{StaticResource Mini}"
-                                            Click="OnMoveUp" Tag="{Binding}" />
-                                    <Button Grid.Column="2" Content="↓" Width="28" Height="24"
-                                            Margin="4,0,0,0" Style="{StaticResource Mini}"
-                                            Click="OnMoveDown" Tag="{Binding}" />
+                                    <!-- 拖拽手柄：按住上下拖动即可调整顺序（原 ↑↓ 按钮已移除） -->
+                                    <Border Grid.Column="1" Width="26" Height="22"
+                                            Background="Transparent" Cursor="SizeAll"
+                                            ToolTip="按住上下拖动调整顺序"
+                                            Tag="{Binding}"
+                                            MouseLeftButtonDown="OnDragHandleDown"
+                                            MouseMove="OnDragHandleMove"
+                                            MouseLeftButtonUp="OnDragHandleUp">
+                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <Rectangle Width="12" Height="1.5" RadiusX="0.75" RadiusY="0.75"
+                                                       Fill="#80FFFFFF" Margin="0,1.4" />
+                                            <Rectangle Width="12" Height="1.5" RadiusX="0.75" RadiusY="0.75"
+                                                       Fill="#80FFFFFF" Margin="0,1.4" />
+                                            <Rectangle Width="12" Height="1.5" RadiusX="0.75" RadiusY="0.75"
+                                                       Fill="#80FFFFFF" Margin="0,1.4" />
+                                        </StackPanel>
+                                    </Border>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

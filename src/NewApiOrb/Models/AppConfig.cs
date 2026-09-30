@@ -19,6 +19,12 @@ public sealed class AppConfig
     /// <summary>收起态圆球上显示的主指标。</summary>
     public string PrimaryField { get; set; } = MetricFields.TodayTotalTokens;
 
+    /// <summary>
+    /// 收起态球体下方那一行的副指标（二级内容）：环比 / 近 N 条流式速度 / 近 N 条耗时 / 不显示。
+    /// 可选值见 <see cref="MetricFields.SubFields"/>；默认保持历史上的「环比昨日」。
+    /// </summary>
+    public string BallSubField { get; set; } = MetricFields.YesterdayCompare;
+
     /// <summary>展开态卡片中显示哪些字段，顺序即展示顺序。</summary>
     public List<string> VisibleFields { get; set; } = new()
     {

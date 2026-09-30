@@ -10,6 +10,17 @@ public sealed class DataBucket
     public long Quota { get; set; }
 }
 
+/// <summary>单条调用日志的样本，供「最近 N 条」类指标使用。</summary>
+public sealed class LogSample
+{
+    public long CompletionTokens { get; set; }
+    public int UseTime { get; set; }
+    public long CreatedAt { get; set; }
+
+    /// <summary>生成速度（tokens/s）。⚠️ use_time 只有整数秒，单条样本误差较大。</summary>
+    public double? Speed => UseTime > 0 ? CompletionTokens / (double)UseTime : null;
+}
+
 /// <summary>日志明细聚合结果（来自 /api/log/self）。</summary>
 public sealed class LogSummary
 {
@@ -30,9 +41,33 @@ public sealed class LogSummary
     /// <summary>按小时聚合的 token 数（索引 0..23）。</summary>
     public long[] HourlyTokens { get; } = new long[24];
 
+    /// <summary>最近的流式请求样本，按时间倒序，最多 3 条。</summary>
+    public List<LogSample> RecentStreams { get; } = new();
+
     public long TotalTokens => PromptTokens + CompletionTokens;
 
     public double AvgLatency => Requests > 0 ? TotalUseTime / Requests : 0;
+
+    /// <summary>最近一条流式请求的生成速度（tok/s）。</summary>
+    public double? StreamSpeedLast1 => RecentStreams.Count > 0 ? RecentStreams[0].Speed : null;
+
+    /// <summary>最近三条流式请求的平均生成速度（tok/s）= Σ输出 ÷ Σ耗时（比逐条平均更稳）。</summary>
+    public double? StreamSpeedLast3
+    {
+        get
+        {
+            var totalTime = RecentStreams.Sum(x => x.UseTime);
+            if (totalTime <= 0) return null;
+            return RecentStreams.Sum(x => x.CompletionTokens) / (double)totalTime;
+        }
+    }
+
+    /// <summary>最近一条流式请求的耗时（秒）。</summary>
+    public int? LatencyLast1 => RecentStreams.Count > 0 ? RecentStreams[0].UseTime : null;
+
+    /// <summary>最近三条流式请求的平均耗时（秒）。不足 3 条时按现有条数算。</summary>
+    public double? LatencyLast3 =>
+        RecentStreams.Count > 0 ? RecentStreams.Average(x => x.UseTime) : null;
 }
 
 /// <summary>账户级信息（来自 /api/user/self）。</summary>
@@ -96,6 +131,12 @@ public sealed class Snapshot
 
     // 对比
     public long? YesterdayTotalTokens { get; set; }
+
+    // 最近 N 条流式请求（收起态副指标用）
+    public double? StreamSpeedLast1 { get; set; }
+    public double? StreamSpeedLast3 { get; set; }
+    public int? LatencyLast1 { get; set; }
+    public double? LatencyLast3 { get; set; }
 
     public string TopModel => Models.Count > 0 ? Models[0].ModelName : "—";
 

@@ -107,6 +107,18 @@ public sealed class NewApiClient
             foreach (var r in await Task.WhenAll(tasks)) rows.AddRange(r.Rows);
         }
 
+        // 「最近 N 条」类指标必须按时间倒序取 —— 分页是 4 路并发拉的，rows 顺序已被打乱，
+        // 不排序会取到随机三条（表现就是球上的速度每次刷新都乱跳）。
+        foreach (var r in rows.Where(x => x.IsStream).OrderByDescending(x => x.CreatedAt).Take(3))
+        {
+            sum.RecentStreams.Add(new LogSample
+            {
+                CompletionTokens = r.Completion,
+                UseTime = r.UseTime,
+                CreatedAt = r.CreatedAt,
+            });
+        }
+
         foreach (var r in rows)
         {
             var tokens = r.Prompt + r.Completion;
@@ -149,7 +161,7 @@ public sealed class NewApiClient
 
     private sealed record LogRow(
         long Prompt, long Completion, long Cache, long Quota,
-        int UseTime, string TokenName, int TokenId, string ModelName, long CreatedAt);
+        int UseTime, bool IsStream, string TokenName, int TokenId, string ModelName, long CreatedAt);
 
     /// <summary>
     /// 限流取一页。重试统一放在 <see cref="GetDataAsync"/>（所有出站请求共用），此处只管并发闸门。
@@ -189,6 +201,7 @@ public sealed class NewApiClient
                     Cache: ParseCacheTokens(Str(row, "other")),
                     Quota: Long(row, "quota"),
                     UseTime: (int)Long(row, "use_time"),
+                    IsStream: Bool(row, "is_stream"),
                     TokenName: Str(row, "token_name"),
                     TokenId: (int)Long(row, "token_id"),
                     ModelName: Str(row, "model_name"),
@@ -318,6 +331,9 @@ public sealed class NewApiClient
 
     private static string Str(JsonElement e, string name) =>
         e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
+
+    private static bool Bool(JsonElement e, string name) =>
+        e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.True;
 
     private static string Truncate(string s, int n) => s.Length <= n ? s : s[..n] + "…";
 }

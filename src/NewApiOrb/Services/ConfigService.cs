@@ -105,6 +105,12 @@ public static class ConfigService
         cfg.VisibleFields = cfg.VisibleFields.Where(known.Contains).Distinct().ToList();
         if (!known.Contains(cfg.PrimaryField)) cfg.PrimaryField = MetricFields.TodayTotalTokens;
 
+        // 副指标是独立目录（含「不显示」等非字段项），别拿 All 校验它。
+        // 旧版配置里没有 BallSubField，反序列化后落到属性默认值 = 环比昨日，行为不变。
+        var knownSub = MetricFields.SubFields.Select(m => m.Key).ToHashSet();
+        if (cfg.BallSubField is null || !knownSub.Contains(cfg.BallSubField))
+            cfg.BallSubField = MetricFields.YesterdayCompare;
+
         return cfg;
     }
 }

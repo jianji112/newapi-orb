@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Forms;
@@ -16,6 +17,9 @@ public partial class App : Application
     private NotifyIcon? _tray;
     private MainWindow? _orb;
     private SettingsWindow? _settings;
+
+    /// <summary>打开设置面板前的配置快照 —— 面板里所有改动都是"实时预览"，点取消要靠它回滚。</summary>
+    private AppConfig? _settingsSnapshot;
 
     public AppConfig Config { get; private set; } = new();
     public MetricsService Metrics { get; } = new();
@@ -54,9 +58,32 @@ public partial class App : Application
         var notConfigured = string.IsNullOrWhiteSpace(Config.AccessToken)
                          || string.IsNullOrWhiteSpace(Config.BaseUrl);
 
+        // 启动引导是最难查的一段：一旦它没弹出来，用户只看到一个"离线"的球，界面上毫无线索。
+        // 所以关键节点必须落痕（startup.log）。
         // 调试开关：ORB_OPEN_SETTINGS=1 时启动即打开设置窗口
-        if (notConfigured || Environment.GetEnvironmentVariable("ORB_OPEN_SETTINGS") == "1")
-            Dispatcher.BeginInvoke(new Action(OpenSettings));
+        var wantSettings = notConfigured
+                        || Environment.GetEnvironmentVariable("ORB_OPEN_SETTINGS") == "1";
+
+        LogStartup($"启动完成 notConfigured={notConfigured} " +
+                   $"env={Environment.GetEnvironmentVariable("ORB_OPEN_SETTINGS")} wantSettings={wantSettings}");
+
+        if (!wantSettings) return;
+
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            LogStartup("BeginInvoke 回调执行，准备 OpenSettings");
+            try
+            {
+                OpenSettings();
+                LogStartup("OpenSettings 正常返回");
+            }
+            catch (Exception ex)
+            {
+                LogStartup("OpenSettings 抛异常：" + ex);
+                MessageBox.Show("设置窗口打开失败：\n" + ex.Message, "New API Orb",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }));
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -70,6 +97,28 @@ public partial class App : Application
         try { _mutex?.ReleaseMutex(); } catch { /* 未持有 */ }
         _mutex?.Dispose();
         base.OnExit(e);
+    }
+
+    /// <summary>
+    /// 启动/引导路径的故障留痕。这段一旦出问题，用户只会看到一个写着"离线"的球，
+    /// 界面上没有任何线索 —— 所以关键节点都要往 startup.log 落一行。
+    /// </summary>
+    private static void LogStartup(string msg)
+    {
+        try
+        {
+            var dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "NewApiOrb");
+            Directory.CreateDirectory(dir);
+
+            var path = Path.Combine(dir, "startup.log");
+            if (File.Exists(path) && new FileInfo(path).Length > 256 * 1024)
+                File.Delete(path);      // 不设上限会一直长
+
+            File.AppendAllText(path,
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {msg}{Environment.NewLine}");
+        }
+        catch { /* 日志写不进去不影响主流程 */ }
     }
 
     // ------------------------------------------------------------ 托盘
@@ -150,14 +199,48 @@ public partial class App : Application
         var restoreTopmost = Config.Topmost;
         if (_orb is not null) _orb.Topmost = false;
 
+        // 面板里的改动都是实时预览（不落盘），先留一份快照供「取消」回滚
+        _settingsSnapshot = Config.Clone();
+
+        LogStartup("OpenSettings: 开始构造 SettingsWindow");
         _settings = new SettingsWindow { Topmost = Config.Topmost };
+        LogStartup("OpenSettings: 构造完成");
         _settings.Closed += (_, _) =>
         {
+            LogStartup("OpenSettings: 设置窗口被 Closed");
             _settings = null;
             if (_orb is not null) _orb.Topmost = restoreTopmost;
         };
+
+        LogStartup("OpenSettings: 调用 Show()");
         _settings.Show();
+        LogStartup($"OpenSettings: Show() 返回 IsVisible={_settings.IsVisible} " +
+                   $"IsLoaded={_settings.IsLoaded} " +
+                   $"rect=({_settings.Left},{_settings.Top},{_settings.ActualWidth}x{_settings.ActualHeight})");
+
         _settings.Activate();
+        LogStartup($"OpenSettings: Activate() 完成 IsVisible={_settings.IsVisible}");
+    }
+
+    /// <summary>
+    /// 设置面板的实时预览：把配置应用到内存与界面，**不落盘**。
+    /// 用户在面板里勾选 / 拖滑块时立刻能看到球上的变化，不必保存之后才知道效果。
+    /// </summary>
+    public void PreviewConfig(AppConfig cfg)
+    {
+        Config = cfg;
+        _orb?.ApplyConfig(cfg);
+    }
+
+    /// <summary>
+    /// 关闭设置面板时调用：没保存过就回滚到打开面板前的样子。
+    /// 保存路径会先清空快照（见 <see cref="ApplyNewConfigAsync"/>），所以此处天然是空操作。
+    /// </summary>
+    public void RevertSettingsPreview()
+    {
+        if (_settingsSnapshot is null) return;
+        PreviewConfig(_settingsSnapshot);
+        _settingsSnapshot = null;
     }
 
     /// <summary>设置保存后调用：落盘 + 立刻按新配置刷新一次。</summary>
@@ -167,6 +250,7 @@ public partial class App : Application
         ConfigService.Save(cfg);
         Metrics.UpdateConfig(cfg);
         _orb?.ApplyConfig(cfg);
+        _settingsSnapshot = null;   // 已提交，关闭面板时不再回滚
         await Metrics.RefreshNowAsync();
     }
 

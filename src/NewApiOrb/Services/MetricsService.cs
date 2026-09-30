@@ -110,6 +110,12 @@ public sealed class MetricsService
             snap.AvgLatency = log.AvgLatency;
             snap.Truncated = log.Truncated;
 
+            // 收起态副指标：最近 N 条流式请求的速度 / 耗时
+            snap.StreamSpeedLast1 = log.StreamSpeedLast1;
+            snap.StreamSpeedLast3 = log.StreamSpeedLast3;
+            snap.LatencyLast1 = log.LatencyLast1;
+            snap.LatencyLast3 = log.LatencyLast3;
+
             snap.Models = log.ByModel.Values
                 .OrderByDescending(m => m.Tokens)
                 .ToList();

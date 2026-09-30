@@ -25,6 +25,12 @@ public static class Fmt
 
     public static string Seconds(double s) => s <= 0 ? "—" : s.ToString("0.#", CultureInfo.InvariantCulture) + "s";
 
+    /// <summary>生成速度：49.4 → "49 tok/s"；不足 10 时保留一位小数 → "8.4 tok/s"（球上空间极窄）。</summary>
+    public static string Speed(double tokPerSec) =>
+        (tokPerSec >= 10
+            ? tokPerSec.ToString("0", CultureInfo.InvariantCulture)
+            : tokPerSec.ToString("0.0", CultureInfo.InvariantCulture)) + " tok/s";
+
     /// <summary>带符号的百分比：+12.3% / -4.1%。</summary>
     public static string Percent(double v) => (v >= 0 ? "+" : "") + v.ToString("0.#", CultureInfo.InvariantCulture) + "%";
 

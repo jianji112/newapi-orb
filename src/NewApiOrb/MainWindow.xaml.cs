@@ -365,16 +365,54 @@ public partial class MainWindow : Window
         BallValue.Foreground = TextBrush;
         ToolTip = $"{s.Username} · 更新于 {s.FetchedAt:HH:mm:ss}";
 
-        if (s.DayOverDay is { } dod)
+        RenderBallSub(s);
+    }
+
+    /// <summary>
+    /// 球体副指标（主指标下方那一行）。可选值见 <see cref="MetricFields.SubFields"/>。
+    /// 取不到数据时整行隐藏，不留一个只写着单位的占位。
+    /// </summary>
+    private void RenderBallSub(Snapshot s)
+    {
+        switch (_cfg.BallSubField)
         {
-            BallDelta.Visibility = Visibility.Visible;
-            BallDelta.Text = Fmt.Percent(dod) + " 环比";
-            BallDelta.Foreground = dod >= 0 ? VioletBrush : MutedBrush;
+            case MetricFields.YesterdayCompare when s.DayOverDay is { } dod:
+                SetBallDelta(Fmt.Percent(dod) + " 环比", dod >= 0 ? VioletBrush : MutedBrush);
+                break;
+
+            case MetricFields.StreamSpeedLast1 when s.StreamSpeedLast1 is { } v:
+                SetBallDelta(Fmt.Speed(v), CyanBrush);
+                break;
+
+            case MetricFields.StreamSpeedLast3 when s.StreamSpeedLast3 is { } v:
+                SetBallDelta(Fmt.Speed(v), CyanBrush);
+                break;
+
+            case MetricFields.LatencyLast1 when s.LatencyLast1 is { } t:
+                SetBallDelta(Fmt.Seconds(t), CyanBrush);
+                break;
+
+            case MetricFields.LatencyLast3 when s.LatencyLast3 is { } t:
+                SetBallDelta(Fmt.Seconds(t), CyanBrush);
+                break;
+
+            default:
+                SetBallDelta(null, CyanBrush);   // 不显示，或数据还没到位
+                break;
         }
-        else
+    }
+
+    private void SetBallDelta(string? text, Brush brush)
+    {
+        if (string.IsNullOrEmpty(text))
         {
             BallDelta.Visibility = Visibility.Collapsed;
+            return;
         }
+
+        BallDelta.Text = text;
+        BallDelta.Foreground = brush;
+        BallDelta.Visibility = Visibility.Visible;
     }
 
     private void RenderCard(Snapshot s)
@@ -467,6 +505,10 @@ public partial class MainWindow : Window
         MetricFields.TopToken => s.TopToken,
         MetricFields.ActiveTokens => s.ActiveTokenCount.ToString(),
         MetricFields.AvgLatency => Fmt.Seconds(s.AvgLatency),
+        MetricFields.StreamSpeedLast1 => s.StreamSpeedLast1 is { } v1 ? Fmt.Speed(v1) : "—",
+        MetricFields.StreamSpeedLast3 => s.StreamSpeedLast3 is { } v3 ? Fmt.Speed(v3) : "—",
+        MetricFields.LatencyLast1 => s.LatencyLast1 is { } t1 ? Fmt.Seconds(t1) : "—",
+        MetricFields.LatencyLast3 => s.LatencyLast3 is { } t3 ? Fmt.Seconds(t3) : "—",
         MetricFields.Balance => Fmt.Compact(s.Balance),
         MetricFields.UsedQuota => Fmt.Compact(s.UsedQuota),
         MetricFields.TotalRequests => Fmt.Group(s.TotalRequests),
